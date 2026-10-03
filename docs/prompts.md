@@ -5,7 +5,6 @@ This file documents every prompt and model setting used in the **LinkedIn Post Q
 ## Overview
 
 | Step | n8n node | Purpose | Model | Temperature |
-|---|---|---|---|---|
 | 1 | Qualify Post | Score a post's relevance, return structured JSON | Google Gemini (Flash) | 0.2 |
 | 2 | Draft Comments | Write 3 comment options for qualified posts | Google Gemini (Flash) | 0.7 |
 
@@ -122,7 +121,6 @@ Ignore: [content that should get a low score]
 ## Tuning tips
 
 | Problem | Fix |
-|---|---|
 | Good posts score below 7 | Add the missing topics to "Topics we care about", or lower the threshold in Check Score |
 | Irrelevant posts score above 4 | Add those content types to "Ignore" |
 | Comments sound generic | Add a rule such as "mention one specific detail from the post" or give one example comment |
