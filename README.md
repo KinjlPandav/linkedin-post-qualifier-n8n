@@ -14,7 +14,6 @@ Sales and marketing teams waste time deciding which LinkedIn posts are worth eng
 
 ## Workflows
 | File | Purpose |
-|---|---|
 | workflows/1-linkedin-post-qualifier.json | Main pipeline |
 | workflows/2-linkedin-weekly-digest.json | Monday summary email |
 | workflows/3-linkedin-error-alerts.json | Failure alerts |
@@ -38,9 +37,6 @@ n8n Cloud, Google Gemini, Google Sheets, Gmail
 - **Human in the loop:** LinkedIn's terms prohibit automated commenting, so a person reviews and posts every comment.
 - **Two AI steps:** one decides if a post is worth it, the second drafts comments only for qualified posts, which saves cost and keeps prompts focused.
 - **Structured output:** a JSON parser forces fixed fields so later nodes work reliably.
-
-## Results
-[Add after the 15-post test: "X of 15 posts matched my expected labels (X%)". Delete this section if you have not run the test.]
 
 ## Limitations and future work
 - Posts are pasted manually (no scraping of LinkedIn).
