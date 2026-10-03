@@ -1,0 +1,147 @@
+{
+  "name": "Linkedin Weekly digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        16
+      ],
+      "id": "e3870dce-76de-40ef-93fd-33f71d1db8c6",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1jEPCeuWDj6sVe8yfq-INN2uz_VO-0xsgERnyBLVSQRY",
+          "mode": "list",
+          "cachedResultName": "LinkedIn Review Queue",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jEPCeuWDj6sVe8yfq-INN2uz_VO-0xsgERnyBLVSQRY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jEPCeuWDj6sVe8yfq-INN2uz_VO-0xsgERnyBLVSQRY/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "99dcd346-2c30-4cfe-992f-ebf5783b481b",
+      "name": "Get row(s) in sheet(Read queue)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yzodLkmdOTTcAjwa",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;\nconst recent = rows.filter(r => new Date(r['Submitted At']).getTime() >= weekAgo);\n\nconst count = s => recent.filter(r => r['Status'] === s).length;\nconst byCategory = {};\nrecent.forEach(r => { byCategory[r['Category']] = (byCategory[r['Category']] || 0) + 1; });\n\nconst top = [...recent]\n  .sort((a, b) => Number(b['Score']) - Number(a['Score']))\n  .slice(0, 3)\n  .map(r => `- ${r['Post URL']} (score ${r['Score']})`)\n  .join('\\n');\n\nconst text =\n`Weekly LinkedIn summary\nPosts submitted: ${recent.length}\nTo review: ${count('To review')} | Posted: ${count('Posted')} | Skipped: ${count('Skipped')}\nBy category: ${JSON.stringify(byCategory)}\n\nTop posts:\n${top || 'None this week'}`;\n\nreturn [{ json: { text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "da3d6571-abd9-4d62-8353-edbcaada203d",
+      "name": "Code in JavaScript(build summary)"
+    },
+    {
+      "parameters": {
+        "sendTo": "pandavkinjal1423@gmail.com",
+        "subject": "Weekly LinkedIn summary",
+        "emailType": "text",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "7d3a5f31-5a94-4dc3-ab73-f5e14b0cd1f2",
+      "name": "Send a message",
+      "webhookId": "09fcd79f-783d-4314-a021-02d3cdce40b3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NjQa10hIOAQxe3ts",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet(Read queue)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet(Read queue)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript(build summary)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript(build summary)": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a7087881-3101-444e-8876-d05d49c36fe8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "488ef170bfc356bbaf2ee0672e11daa03f81f75114d9584d430f48c12bcb6355"
+  },
+  "nodeGroups": [],
+  "id": "rRyF6RCFHbpATSEx",
+  "tags": []
+}

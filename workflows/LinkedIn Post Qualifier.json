@@ -1,0 +1,796 @@
+{
+  "name": "LinkedIn Post Qualifier",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "LinkedIn Post Qualifier",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Post URL"
+            },
+            {
+              "fieldLabel": "Author Name"
+            },
+            {
+              "fieldLabel": "Post Text",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Your Notes",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0af574f4-af1a-4edf-b9c3-8b20de987f41",
+      "name": "On form submission",
+      "webhookId": "93677192-f3c9-496e-9c84-3e3ac715a0af"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Post author: {{ $json['Author Name'] }}\nPost text:\n{{ $json['Post Text'] }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You evaluate LinkedIn posts for a B2B team.  Company: LeapFlow, a B2B company that builds AI workflow automation (n8n, Make, LLM agents) for small and mid-size businesses. Target audience: founders, COOs, operations managers, sales and marketing heads at SaaS, e-commerce, and agency companies with 10-200 employees. Topics we care about: business process automation, AI agents, CRM and sales automation, customer support automation, lead generation, operational efficiency. Ignore: job-seeker posts, hiring announcements, memes, politics, motivational quotes with no business content, personal life updates, giveaways.  Score the post from 1-10 for how worthwhile it is for us to engage with it. 8-10: directly relevant to our audience or topics and has a clear angle to comment on. 5-7: loosely relevant. 1-4: not relevant or no useful angle. Category must be one of: hiring, thought leadership, product launch, industry news, personal story, other. Return the JSON only. Base the score only on the post text."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        0
+      ],
+      "id": "8b0bfed3-cda7-40e1-acf1-03bcfc6e6854",
+      "name": "Basic LLM Chain(qualify Post)"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        208
+      ],
+      "id": "be287cd9-5d5a-44ca-b926-bbc3f56c0607",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"relevant\": true,\n  \"score\": 8,\n  \"category\": \"thought leadership\",\n  \"reason\": \"Short explanation in one sentence\",\n  \"key_points\": [\"point one\", \"point two\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        208
+      ],
+      "id": "f74ee827-0fb7-47bf-91a9-5c871193b450",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "97e90a35-2c7a-453b-afb2-9f66f14d95e4",
+              "name": "post_url",
+              "value": "={{ $('On form submission').item.json['Post URL'] }}",
+              "type": "string"
+            },
+            {
+              "id": "6d217d7c-ef5e-4b05-84d8-7b156419dd43",
+              "name": "author",
+              "value": "={{ $('On form submission').item.json['Author Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "a7134b82-72aa-4460-928c-c4526ee9bb6c",
+              "name": "post_text",
+              "value": "={{ $('On form submission').item.json['Post Text'] }}",
+              "type": "string"
+            },
+            {
+              "id": "583f02b1-6767-41dc-97ee-66775f6ed5e1",
+              "name": "notes",
+              "value": "={{ $('On form submission').item.json['Your Notes'] }}",
+              "type": "string"
+            },
+            {
+              "id": "b98ccf8f-d44c-4273-9167-1f30142f388c",
+              "name": "relevant",
+              "value": "={{ $json.output.relevant }}",
+              "type": "boolean"
+            },
+            {
+              "id": "2c03e321-1615-452f-ac77-4953b667b48b",
+              "name": "score",
+              "value": "={{ $json.output.score }}",
+              "type": "number"
+            },
+            {
+              "id": "99c5e351-013e-49aa-b0f1-bceffbbf3acf",
+              "name": "category",
+              "value": "={{ $json.output.category }}",
+              "type": "string"
+            },
+            {
+              "id": "62468e22-37b1-4a79-b94d-40eef06adf2c",
+              "name": "reason",
+              "value": "={{ $json.output.reason }}",
+              "type": "string"
+            },
+            {
+              "id": "68a57e18-3e18-4e2b-89e7-b0a6fbcc6fe2",
+              "name": "key_points",
+              "value": "={{ $json.output.key_points }}",
+              "type": "array"
+            },
+            {
+              "id": "6cf1d98a-aa5f-4ceb-b05c-351075fb5569",
+              "name": "submitted_at",
+              "value": "={{ $('On form submission').item.json.submittedAt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        592,
+        0
+      ],
+      "id": "80663b03-74d3-48bb-8027-70a28bbf14e9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5d857b49-5752-4c1d-a4a5-a6b0a6e39c76",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": "={{7}}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "86cc2a52-b6b4-45cc-a0d2-ea415cc0c792",
+              "leftValue": "={{ $json.relevant }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        816,
+        0
+      ],
+      "id": "05148421-ce95-4890-aa6e-d133b69c1581",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        -80
+      ],
+      "id": "6d16cc18-5488-40e6-9ce7-5a5e1876da16",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"draft_1\": \"insightful comment\",\n  \"draft_2\": \"question-style comment\",\n  \"draft_3\": \"short friendly comment\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1216,
+        -80
+      ],
+      "id": "64e30e31-93cb-4619-924d-55a01bc8dbe2",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Post text:\n{{ $json.post_text }}\n\nKey points: {{ $json.key_points }}\nWhy it matters to us: {{ $json.reason }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Write 3 LinkedIn comments replying to the post below, as a human operations professional at LeapFlow, a company that builds AI workflow automation for small businesses. draft_1: insightful, adds one useful idea or experience. draft_2: ends with a thoughtful question. draft_3: short and warm, under 20 words. Rules: refer to a specific point from the post. No sales pitch, no links, no hashtags. Do not start with \"Great post\". At most one emoji. Under 50 words each except draft_3. Return the JSON only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1072,
+        -256
+      ],
+      "id": "4c6d23fa-34c6-4c02-92a7-0aa8e35c4102",
+      "name": "Basic LLM Chain(Draft comment)"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jEPCeuWDj6sVe8yfq-INN2uz_VO-0xsgERnyBLVSQRY",
+          "mode": "list",
+          "cachedResultName": "LinkedIn Review Queue",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jEPCeuWDj6sVe8yfq-INN2uz_VO-0xsgERnyBLVSQRY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jEPCeuWDj6sVe8yfq-INN2uz_VO-0xsgERnyBLVSQRY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Submitted At": "={{ $('If').item.json.submitted_at }}",
+            "Post URL": "={{ $('If').item.json.post_url }}",
+            "Author": "={{ $('If').item.json.author }}",
+            "Post Text": "={{ $('If').item.json.post_text }}",
+            "Relevant": "={{ $('If').item.json.relevant }}",
+            "Score": "={{ $('If').item.json.score }}",
+            "Category": "={{ $('If').item.json.category }}",
+            "Reason": "={{ $('If').item.json.reason }}",
+            "Key Points": "={{ $('If').item.json.key_points }}",
+            "Draft 1": "={{ $json.output.draft_1 }}",
+            "My Notes": "={{ $('On form submission').item.json['Your Notes'] }}",
+            "Draft 2": "={{ $json.output.draft_2 }}",
+            "Draft 3": "={{ $json.output.draft_3 }}",
+            "Status": "To review"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Submitted At",
+              "displayName": "Submitted At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Post URL",
+              "displayName": "Post URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Author",
+              "displayName": "Author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Post Text",
+              "displayName": "Post Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Relevant",
+              "displayName": "Relevant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Key Points",
+              "displayName": "Key Points",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Draft 1",
+              "displayName": "Draft 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Draft 2",
+              "displayName": "Draft 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Draft 3",
+              "displayName": "Draft 3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "My Notes",
+              "displayName": "My Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1440,
+        -256
+      ],
+      "id": "fb1ba72a-1674-46dd-a83e-f842e3982d3b",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yzodLkmdOTTcAjwa",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "pandavkinjal1423@gmail.com",
+        "subject": "=New post to review (score {{$('Edit Fields').item.json.score}})",
+        "emailType": "text",
+        "message": "=Post: {{ $('Edit Fields').item.json.post_url }}\nWhy: {{ $('Edit Fields').item.json.reason }}\n\nDraft 1: {{ $('Basic LLM Chain(Draft comment)').item.json.output.draft_1 }}\n\nDraft 2: {{ $('Basic LLM Chain(Draft comment)').item.json.output.draft_2 }}\n\nDraft 3: {{ $('Basic LLM Chain(Draft comment)').item.json.output.draft_3 }}\n\nOpen the Sheet, pick one, post it yourself on LinkedIn, then set Status to \"Posted\".",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        -256
+      ],
+      "id": "9fdf9b85-4935-422f-868e-9015ec6defb1",
+      "name": "Send a message",
+      "webhookId": "b8be0514-3759-49a3-b1e3-af611829ca8d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NjQa10hIOAQxe3ts",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jEPCeuWDj6sVe8yfq-INN2uz_VO-0xsgERnyBLVSQRY",
+          "mode": "list",
+          "cachedResultName": "LinkedIn Review Queue",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jEPCeuWDj6sVe8yfq-INN2uz_VO-0xsgERnyBLVSQRY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jEPCeuWDj6sVe8yfq-INN2uz_VO-0xsgERnyBLVSQRY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Key Points": "={{ $('Edit Fields').item.json.key_points }}",
+            "Submitted At": "={{ $('Edit Fields').item.json.submitted_at }}",
+            "Post URL": "={{ $('Edit Fields').item.json.post_url }}",
+            "Author": "={{ $('Edit Fields').item.json.author }}",
+            "Post Text": "={{ $('Edit Fields').item.json.post_text }}",
+            "Relevant": "={{ $('Edit Fields').item.json.relevant }}",
+            "Score": "={{ $('Edit Fields').item.json.score }}",
+            "Category": "={{ $('Edit Fields').item.json.category }}",
+            "Reason": "={{ $('Edit Fields').item.json.reason }}",
+            "Status": "Skipped",
+            "My Notes": "={{ $('Edit Fields').item.json.notes }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Submitted At",
+              "displayName": "Submitted At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Post URL",
+              "displayName": "Post URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Author",
+              "displayName": "Author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Post Text",
+              "displayName": "Post Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Relevant",
+              "displayName": "Relevant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Key Points",
+              "displayName": "Key Points",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Draft 1",
+              "displayName": "Draft 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Draft 2",
+              "displayName": "Draft 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Draft 3",
+              "displayName": "Draft 3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "My Notes",
+              "displayName": "My Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        96
+      ],
+      "id": "1969cef3-6645-450e-b0af-f7e698ae320d",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yzodLkmdOTTcAjwa",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain(qualify Post)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain(qualify Post)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain(qualify Post)",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain(qualify Post)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain(Draft comment)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain(Draft comment)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain(Draft comment)",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain(Draft comment)": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "456b6737-7e0b-480a-be7e-48479f3bd3b3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "488ef170bfc356bbaf2ee0672e11daa03f81f75114d9584d430f48c12bcb6355"
+  },
+  "nodeGroups": [],
+  "id": "4qJotoxywbHXZkhQ",
+  "tags": []
+}
